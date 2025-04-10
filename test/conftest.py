@@ -32,3 +32,10 @@ def input_path() -> Path:
 @pytest.fixture
 def test_txt_file() -> Path:
     return test_data_output_path.joinpath('test_file.txt')
+
+
+@pytest.fixture(autouse=True)
+def cleanup_test_file(test_txt_file):
+    yield
+    if test_txt_file.exists():
+        test_txt_file.unlink()

@@ -1,9 +1,6 @@
 import logging
-from pathlib import Path
 
-import pytest
 from ollama import Client
-
 from ollama_mcpo_adapter import OllamaMCPOAdapter, MCPOService
 
 logging.getLogger("httpcore").setLevel(logging.WARNING)
@@ -19,8 +16,6 @@ def test_ollama_adapter_mcp_config(input_path):
 
 
 def test_ollama_adapter_with_ollama(input_path, test_txt_file):
-    test_txt_file.unlink(missing_ok=True)
-
     mcp_config_path = input_path.joinpath('mcp_config.json')
     host, port = "0.0.0.0", 4090
 
@@ -40,3 +35,11 @@ def test_ollama_adapter_with_ollama(input_path, test_txt_file):
     assert len(tools) > 0
     assert len(response.message.tool_calls) > 0
     assert test_txt_file.exists()
+    assert any(
+        "test_file.txt" in str(call.get("function", {}).get("arguments", "")) for call in response.message.tool_calls)
+
+
+def test_server_discovery_pattern(input_path):
+    adapter = OllamaMCPOAdapter(config_path=input_path / "mcp_config.json")
+    servers = adapter._discover_servers("http://localhost:4090")
+    assert all(isinstance(name, str) for name in servers)
