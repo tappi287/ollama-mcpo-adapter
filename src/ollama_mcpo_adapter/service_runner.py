@@ -11,9 +11,12 @@ from typing import Dict, List, Union
 import psutil
 
 
-def _kill_process_group(process: subprocess.Popen) -> None:
+def _kill_process_group(process: subprocess.Popen = None, process_id: int = None) -> None:
+    if process is not None:
+        process_id = process.pid
+
     try:
-        parent = psutil.Process(process.pid)
+        parent = psutil.Process(process_id)
         children = parent.children(recursive=True)
         for child in children:
             logging.info(f"Shutting down child process {child.pid} {child.name()}")
@@ -22,7 +25,9 @@ def _kill_process_group(process: subprocess.Popen) -> None:
         parent.kill()
     except psutil.NoSuchProcess:
         pass
-    process.wait()
+
+    if process is not None:
+        process.wait()
 
 
 def run_mcpo(host: str, port: Union[int, str],
@@ -56,22 +61,27 @@ def run_mcpo(host: str, port: Union[int, str],
         while not abort_event.is_set():
             try:
                 process.wait(timeout=5.0)
-                break  # Exit if finished naturally
+                # Exit if finished naturally
+                logging.info("Process was terminated.")
+                break
             except subprocess.TimeoutExpired:
                 continue
     except (KeyboardInterrupt, asyncio.CancelledError):
         logging.info("Graceful shutdown triggered")
     finally:
         try:
+            logging.debug("Trying to terminate process group.")
             if process is not None:
                 _kill_process_group(process)
         except Exception as e:
             logging.error(f"Error terminating processes: {e}")
 
         try:
+            logging.debug("Cleaning temp file.")
             os.unlink(temp_config_path)
         except FileNotFoundError:
             pass
 
         if finished_event:
             finished_event.set()
+    logging.info(f"run_mcpo finished.")
