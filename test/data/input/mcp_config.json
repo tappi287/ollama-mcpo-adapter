@@ -2,7 +2,10 @@
   "mcpServers": {
     "time": {
       "command": "uvx",
-      "args": ["mcp-server-time", "--local-timezone=Europe/Berlin"]
+      "args": [
+        "mcp-server-time",
+        "--local-timezone=Europe/Berlin"
+      ]
     },
     "filesystem": {
       "command": "npx",
@@ -10,6 +13,12 @@
         "-y",
         "@modelcontextprotocol/server-filesystem",
         "C:\\ai"
+      ]
+    },
+    "ddg-search": {
+      "command": "uvx",
+      "args": [
+        "duckduckgo-mcp-server"
       ]
     }
   }

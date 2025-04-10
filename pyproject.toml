@@ -3,6 +3,7 @@ name = "ollama-mcpo-adapter"
 version = "0.1.0"
 description = "Adapter to expose MCPO tools in Ollama-compatible format"
 requires-python = ">=3.11"
+readme = "README.md"
 dependencies = [
     "mcpo>=0.0.9",
     "psutil>=7.0.0",
