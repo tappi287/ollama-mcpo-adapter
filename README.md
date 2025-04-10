@@ -29,11 +29,15 @@ uv pip install -e .
 ---
 
 ### 2. Usage with Existing MCPO Instance
+```bash
+# Assuming you have MCPO running like this
+uvx mcpo --port 5090 --config /path/to/config.json
+```
 
 ```python
 from ollama_mcpo_adapter import OllamaMCPOAdapter
 
-adapter = OllamaMCPOAdapter(host="localhost", port=5090)
+adapter = OllamaMCPOAdapter(host="localhost", port=5090, config_path="/path/to/config.json")
 # Gets tool descriptions from MCPO FastAPI /docs
 tools = adapter.list_tools_ollama()
 ```
@@ -42,11 +46,11 @@ tools = adapter.list_tools_ollama()
 
 ### 3. Usage with Local MCPO Service
 
+You can start a MCPO service with this extension:
 ```python
-from ollama_mcpo_adapter import MCPOService, OllamaMCPOAdapter
-from ollama import Client
+from ollama_mcpo_adapter import MCPOService
 
-# Start MCPO Service from a config or mcp_config JSON file
+# Provide your mcp config as JSON file or dictionary
 mcp_config = {
     "mcpServers": {
         "time": {"command": "uvx", "args": ["mcp-server-time", "--local-timezone=Europe/Berlin"]}
@@ -57,11 +61,18 @@ mcpo = MCPOService("127.0.0.1", 4090, config=mcp_config,
                    config_path="path/to/mcp_config.json")
 # MCPOSService class handles MCPO server start-up and shutdown and in a subprocess
 mcpo.start(wait=True)
+```
 
-# Connect the adapter
+Then get all available tools with the adapter:
+```python
+from ollama_mcpo_adapter import OllamaMCPOAdapter
 adapter = OllamaMCPOAdapter("127.0.0.1", 4090)
 tools = adapter.list_tools_ollama()
+```
 
+Send this to Ollama:
+```python
+from ollama import Client
 # Send a prompt to Ollama using discovered tools
 client = Client(host="http://127.0.0.1:11434")
 response = client.chat(
@@ -69,7 +80,10 @@ response = client.chat(
     messages=[{"role": "user", "content": "Write a file..."}],
     tools=tools,
 )
+```
 
+And finally call the tools:
+```python
 # Handle any tool calls
 if response.message.tool_calls:
     adapter.call_tools_from_response(response.message.tool_calls)
@@ -82,8 +96,6 @@ if response.message.tool_calls:
 ```bash
 pytest
 ```
-
-Add your `mcp_config.json` and test files under `tests/data/input`.
 
 ---
 
