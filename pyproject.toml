@@ -1,0 +1,32 @@
+[project]
+name = "ollama-mcpo-adapter"
+version = "0.1.0"
+description = "Adapter to expose MCPO tools in Ollama-compatible format"
+requires-python = ">=3.11"
+dependencies = [
+    "mcpo>=0.0.9",
+    "psutil>=7.0.0",
+    "ollama>=0.4.7",
+]
+
+[dependency-groups]
+dev = [
+    "black>=25.1.0",
+    "pytest>=8.3.5",
+]
+
+[project.scripts]
+run = "ollama_mcpo_adapter.cli:run"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.black]
+line-length = 120
+
+[tool.pytest.ini_options]
+log_cli = true
+log_level = "DEBUG"
+testpaths = ["tests"]
+asyncio_default_fixture_loop_scope = "module"
