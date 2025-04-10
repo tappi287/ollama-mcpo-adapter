@@ -2,3 +2,4 @@ __pycache__/
 /.venv
 /test/data/output/
 /dist
+/.env

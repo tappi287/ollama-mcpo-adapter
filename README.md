@@ -28,12 +28,12 @@ uv pip install -e .
 ```
 ---
 
-### 2. Usage with Existing MCPO Instance
+### Usage with Existing MCPO Instance
+Assuming you have MCPO running like this:
 ```bash
-# Assuming you have MCPO running like this
 uvx mcpo --port 5090 --config /path/to/config.json
 ```
-
+You can get all available functions in Ollama ToolCall format with the adapter:
 ```python
 from ollama_mcpo_adapter import OllamaMCPOAdapter
 
@@ -41,10 +41,12 @@ adapter = OllamaMCPOAdapter(host="localhost", port=5090, config_path="/path/to/c
 # Gets tool descriptions from MCPO FastAPI /docs
 tools = adapter.list_tools_ollama()
 ```
+You can omit the config path. But discovery of MCP server names is more reliable with a provided config.
+Otherwise, the server names will be read from the automatically generated OpenAPI docs [MCPO](https://github.com/open-webui/mcpo) provides which might change in the future.
 
 ---
 
-### 3. Usage with Local MCPO Service
+### Usage with Local MCPO Service
 
 You can start a MCPO service with this extension:
 ```python
@@ -91,7 +93,15 @@ if response.message.tool_calls:
 
 ---
 
-## 🧪 Running Tests
+### Env
+- MS Windows npx path, you can overwrite npx with a path to npx in the config parser 
+  
+    example: `WIN_NODEJS_NPX_PATH=C:\Program Files\nodejs\npx.cmd`
+
+
+---
+
+### 🧪 Running Tests
 
 ```bash
 pytest
@@ -99,7 +109,7 @@ pytest
 
 ---
 
-## 📂 Project Structure
+### 📂 Project Structure
 
 ```
 ollama_mcpo_adapter/
@@ -111,6 +121,6 @@ ollama_mcpo_adapter/
 
 ---
 
-## 📜 License
+### 📜 License
 
 MIT. See [LICENSE](./LICENSE).

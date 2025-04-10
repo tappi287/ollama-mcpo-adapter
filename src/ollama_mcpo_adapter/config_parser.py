@@ -1,9 +1,10 @@
 import json
+import os
 import sys
 from pathlib import Path
 from typing import Dict, Union, List, Optional
 
-WIN_NPX: str = "C:\\Program Files\\nodejs\\npx.cmd"
+WIN_NPX_PATH: str = os.getenv("WIN_NODEJS_NPX_PATH", "npx")
 
 
 def adapt_config(config: Dict[str, Union[str, List[str], Dict[str, Union[str, List[str]]]]]) -> Dict[
@@ -12,7 +13,7 @@ def adapt_config(config: Dict[str, Union[str, List[str], Dict[str, Union[str, Li
         server_config = config["mcpServers"][server]
 
         if server_config["command"] == "npx" and sys.platform.lower().startswith('win'):
-            server_config["command"] = WIN_NPX
+            server_config["command"] = WIN_NPX_PATH
     return config
 
 
