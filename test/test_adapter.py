@@ -13,7 +13,7 @@ def test_ollama_adapter_mcp_config(input_path):
 
     # Adapter should extract server names from provided MCP Config
     server_names = adapter._discover_servers("")
-    assert len(server_names) == 2
+    assert len(server_names) == 3
     assert all(isinstance(name, str) for name in server_names)
 
 
@@ -30,7 +30,7 @@ def test_ollama_adapter_with_ollama(input_path, output_path, test_txt_file, olla
         adapter = OllamaMCPOAdapter(host, port)
         tools = adapter.list_tools_ollama()
 
-        model = "jacob-ebey/phi4-tools:latest"
+        model = "qwen2.5-coder:7b"
         prompt = f"Create a file named \"test_file.txt\" in {test_txt_file.parent.as_posix()} with content: test"
 
         client = Client(host="http://127.0.0.1:11434")
