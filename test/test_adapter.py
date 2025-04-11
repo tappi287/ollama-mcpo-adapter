@@ -1,4 +1,6 @@
+import json
 import logging
+import unittest.mock
 
 from ollama import Client
 
@@ -15,6 +17,61 @@ def test_ollama_adapter_mcp_config(input_path):
     server_names = adapter._discover_servers("")
     assert len(server_names) == 3
     assert all(isinstance(name, str) for name in server_names)
+
+
+def test_ollama_adapter_with_openapi_spec(input_path, ):
+    """ Test that the OllamaMCPOAdapter correctly parses an OpenAPI spec from a file,
+        without relying on an actual running MCPO instance.
+    """
+    # Load the static OpenAPI specification file
+    openapi_path = input_path.joinpath('filesystem_openapi.json')
+    with open(openapi_path, 'r') as f:
+        openapi_spec = json.load(f)
+    openapi_schemas = openapi_spec.get("components", {}).get("schemas", {})
+
+    # Mock MCPConfig for server_name discovery
+    with open(input_path.joinpath('mcp_config.json'), "r") as f:
+        mock_mcp_config = {"mcpServers": {"filesystem": json.load(f)["mcpServers"]["filesystem"]}}
+
+    # Mock httpx.get to return our test OpenAPI spec
+    mock_response = unittest.mock.Mock()
+    mock_response.content = json.dumps(openapi_spec).encode()
+    mock_response.status_code = 200
+    mock_response.json.return_value = openapi_spec
+
+    with unittest.mock.patch('ollama_mcpo_adapter.adapter.httpx.get', return_value=mock_response):
+        # Create adapter instance pointing to non-existent server (we're mocking the response)
+        adapter = OllamaMCPOAdapter("localhost", 5090, config=mock_mcp_config)
+
+        # Get tools from OpenAPI spec
+        ollama_tools = adapter.list_tools_ollama()
+
+        # Verify that tools were parsed correctly
+        assert len(ollama_tools) > 0, "Expected at least one tool to be discovered"
+
+        for ollama_tool in ollama_tools:
+            ollama_tool_name = ollama_tool.get('function', {}).get('name')
+            assert 'type' in ollama_tool and ollama_tool['type'] == 'function', f"Tool {ollama_tool_name} is missing or has incorrect type"
+
+            openapi_path_name = f"/{ollama_tool_name.split("_", 1)[1]}"
+            assert openapi_path_name in openapi_spec["paths"], f"Tool {ollama_tool_name} not found in OpenAPI Paths"
+            openapi_path = openapi_spec["paths"][openapi_path_name].get("post", {})
+
+            # Verify required fields
+            ollama_tool_function = ollama_tool.get("function", {})
+            required_fields = ['name', 'description', 'parameters']
+            for field in required_fields:
+                assert field in ollama_tool_function, f"Tool missing required field: {field}"
+
+            # Verify parameters
+            if 'requestBody' in openapi_path:
+                openapi_schema = adapter._resolve_ref(
+                    openapi_path['requestBody']['content']['application/json']['schema']['$ref'], openapi_schemas)
+                ollama_tool_params = ollama_tool_function.get("parameters", {})
+                assert ollama_tool_params['properties'] == openapi_schema['properties']
+                assert ollama_tool_params['required'] == openapi_schema['required']
+
+    print("Successfully parsed OpenAPI spec and verified Ollama tool structure")
 
 
 def test_ollama_adapter_with_ollama(input_path, output_path, test_txt_file, ollama_running):

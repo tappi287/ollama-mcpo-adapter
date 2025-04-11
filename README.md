@@ -1,15 +1,15 @@
 
 # 🦙 ollama-mcpo-adapter
 
-**Expose MCPO tools as Ollama-compatible functions** using a simple Python adapter and optional runtime service.
+**Expose MCPO, the MCP-to-OpenAPI proxy server, tools as Ollama-compatible functions** using a simple Python adapter and optional runtime service.
 
 ---
 
 ## ✨ Features
 
-- 🔌 Connect to any existing [MCPO](https://github.com/open-webui/mcpo) instance
-- ⚙️ Launch your own MCPO server locally via `MCPOService`
-- 🔁 Convert [MCP tools](https://modelcontextprotocol.info/docs) to Ollama-compatible tool functions
+- 🔌 Connect to a [MCPO](https://github.com/open-webui/mcpo) instance
+- ⚙️ Launch your own MCPO server programmatically via `MCPOService`
+- 🔁 List [MCP tools](https://modelcontextprotocol.info/docs) exposed via OpenAPI as Ollama-compatible tool functions
 
 ---
 
@@ -21,23 +21,16 @@
 pip install ollama-mcpo-adapter
 ```
 
-Or with [`uv`](https://docs.astral.sh/uv/):
-
-```bash
-uv pip install -e .
-```
----
-
 ### Usage with Existing MCPO Instance
 Assuming you have MCPO running like this:
 ```bash
-uvx mcpo --port 5090 --config /path/to/config.json
+uvx mcpo --port 5090 --config /path/to/mcp_config.json
 ```
 You can get all available functions in Ollama ToolCall format with the adapter:
 ```python
 from ollama_mcpo_adapter import OllamaMCPOAdapter
 
-adapter = OllamaMCPOAdapter(host="localhost", port=5090, config_path="/path/to/config.json")
+adapter = OllamaMCPOAdapter(host="localhost", port=5090, config_path="/path/to/mcp_config.json")
 # Gets tool descriptions from MCPO FastAPI /docs
 tools = adapter.list_tools_ollama()
 ```
@@ -63,6 +56,8 @@ mcpo = MCPOService("127.0.0.1", 4090, config=mcp_config,
                    config_path="path/to/mcp_config.json")
 # MCPOSService class handles MCPO server start-up and shutdown and in a subprocess
 mcpo.start(wait=True)
+...
+mcpo.stop()
 ```
 
 Then get all available tools with the adapter:
@@ -117,6 +112,7 @@ ollama_mcpo_adapter/
 ├── service.py        # Optional: launch MCPO programmatically
 ├── service_runner.py # MCPO subprocess control
 ├── config_parser.py  # MCP config parsing helpers
+├── dispatcher.py     # Dispatch tool calls
 ```
 
 ---
